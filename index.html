@@ -893,6 +893,43 @@ svg.leaflet-image-layer.leaflet-interactive path {
   a.rlink{color:var(--accent); font-size:.74rem; text-decoration:none; white-space:nowrap; font-weight:600; margin-left:6px;}
   a.rlink:hover{text-decoration:underline;}
   .flexhead{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  /* Asistente de IA */
+  .ai-fab{
+    position:fixed; bottom:24px; right:24px; z-index:2400;
+    width:58px; height:58px; border-radius:50%; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#38bdf8,#8b5cf6); color:#fff; font-size:1.5rem;
+    box-shadow:0 6px 20px rgba(56,189,248,.4); transition:.2s;
+  }
+  .ai-fab:hover{transform:scale(1.08);}
+  .ai-panel{
+    position:fixed; bottom:24px; right:24px; z-index:2450;
+    width:min(380px, 92vw); height:min(540px, 80vh);
+    background:var(--panel); border:1px solid var(--line); border-radius:18px;
+    display:none; flex-direction:column; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.5);
+  }
+  .ai-panel.open{display:flex;}
+  .ai-head{
+    display:flex; align-items:center; justify-content:space-between; padding:12px 16px;
+    background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(139,92,246,.18)); border-bottom:1px solid var(--line);
+  }
+  .ai-icon{background:none; border:none; color:var(--muted); cursor:pointer; font-size:1rem; padding:4px 6px; border-radius:7px;}
+  .ai-icon:hover{background:var(--panel2); color:var(--text);}
+  .ai-cfg{padding:12px 16px; border-bottom:1px solid var(--line); background:var(--panel2);}
+  .ai-cfg label{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; font-weight:700;}
+  .ai-cfg input{width:100%; margin:6px 0; background:var(--bg); border:1px solid var(--line); color:var(--text); padding:8px 11px; border-radius:8px; font-size:.85rem; outline:none;}
+  .ai-cfg p{font-size:.72rem; color:var(--muted); margin-bottom:8px; line-height:1.4;}
+  .ai-msgs{flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px;}
+  .aim{max-width:86%; padding:9px 13px; border-radius:14px; font-size:.88rem; line-height:1.45;}
+  .aim.user{align-self:flex-end; background:var(--accent); color:#0b1220; border-bottom-right-radius:4px;}
+  .aim.bot{align-self:flex-start; background:var(--panel2); border:1px solid var(--line); border-bottom-left-radius:4px;}
+  .aim.bot .btn{margin-top:6px;}
+  .aim.bot b{color:var(--accent);}
+  .aim.typing{color:var(--muted); font-style:italic;}
+  .ai-mode{font-size:.68rem; color:var(--muted); text-align:center; padding:2px 0 6px;}
+  .ai-input{display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line);}
+  .ai-input input{flex:1; background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:9px 13px; border-radius:999px; font-size:.88rem; outline:none;}
+  .ai-input input:focus{border-color:var(--accent);}
+  .ai-input .btn{border-radius:50%; width:40px; height:40px; padding:0;}
   @media (max-width:760px){
     .map-side{position:absolute; right:0; top:0; bottom:0; max-width:92%;}
     nav{overflow-x:auto;}
@@ -1037,6 +1074,28 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 </main>
 
+<button class="ai-fab" id="aiFab" onclick="toggleAi(true)" title="Asistente de viaje con IA">✨</button>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-head">
+    <b>✨ Asistente de viaje</b>
+    <div style="display:flex;gap:4px;">
+      <button class="ai-icon" onclick="toggleAiCfg()" title="Conectar IA real (API de Claude)">⚙️</button>
+      <button class="ai-icon" onclick="toggleAi(false)">✕</button>
+    </div>
+  </div>
+  <div class="ai-cfg" id="aiCfg" style="display:none;">
+    <label>Clave API de Anthropic (opcional)</label>
+    <input id="aiKey" type="password" placeholder="sk-ant-…">
+    <p>Sin clave, el asistente funciona en <b>modo local</b> (reglas sobre el catálogo, sin internet). Con clave, responde <b>Claude en tiempo real</b> (modelo claude-haiku-4-5). La clave solo vive en esta pestaña; en la versión desplegada irá en el servidor (función de Vercel), nunca en el navegador.</p>
+    <button class="btn small" onclick="saveAiKey()">Guardar</button>
+  </div>
+  <div class="ai-msgs" id="aiMsgs"></div>
+  <div class="ai-mode" id="aiMode"></div>
+  <div class="ai-input">
+    <input id="aiText" placeholder="Ej: tengo 1500 € y 10 días en enero…" onkeydown="if(event.key==='Enter')sendAi()">
+    <button class="btn" onclick="sendAi()" title="Enviar">➤</button>
+  </div>
+</div>
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modalBox"></div>
 </div>
@@ -2463,6 +2522,167 @@ function publishPost(){
   sharePrefill = null; closeModal(); go('comunidad'); toast('🎉 ¡Viaje publicado!');
 }
 function closeModal(){ $('modalBg').classList.remove('open'); }
+
+/* =====================================================================
+   ASISTENTE DE IA — modo local (reglas) o Claude en tiempo real (con clave)
+   ===================================================================== */
+let aiKey = '', aiMsgs = [], aiBusy = false, aiOpened = false;
+
+function toggleAi(open){
+  $('aiPanel').classList.toggle('open', open);
+  $('aiFab').style.display = open ? 'none' : '';
+  if(open && !aiOpened){
+    aiOpened = true;
+    aiBot(`¡Hola ${currentUser.n}! 👋 Soy tu asistente de viaje. Puedo ayudarte con cosas como:<br>
+      · "tengo <b>1500 €</b> y <b>10 días</b> en enero"<br>
+      · "¿cuándo conviene ir a <b>Bali</b>?"<br>
+      · "¿cuánto cuesta una semana en <b>Roma</b>?"<br>
+      · "quiero <b>playa</b> y <b>buceo</b> barato"<br>
+      Ahora estoy en <b>modo local</b>; con una clave API (⚙️) respondo con IA real en tiempo real.`);
+  }
+  paintAiMode();
+  if(open) $('aiText').focus();
+}
+function toggleAiCfg(){ const c=$('aiCfg'); c.style.display = c.style.display==='none' ? '' : 'none'; }
+function saveAiKey(){
+  aiKey = $('aiKey').value.trim();
+  toggleAiCfg(); paintAiMode();
+  toast(aiKey ? '✨ IA real activada (Claude)' : 'Modo local activado');
+}
+function paintAiMode(){
+  $('aiMode').textContent = aiKey ? '✨ IA real: claude-haiku-4-5 vía API de Anthropic'
+    : aiServer === true ? '✨ IA real vía servidor (clave protegida en Vercel)'
+    : '🔧 Modo local — con /api/chat desplegado o clave API (⚙️) respondo con IA real';
+}
+function aiRender(){
+  $('aiMsgs').innerHTML = aiMsgs.map(m =>
+    `<div class="aim ${m.who}">${m.who==='user' ? m.plain.replace(/</g,'&lt;') : m.html}</div>`).join('')
+    + (aiBusy ? '<div class="aim bot typing">escribiendo…</div>' : '');
+  $('aiMsgs').scrollTop = $('aiMsgs').scrollHeight;
+}
+function aiBot(html, plain){ aiMsgs.push({who:'bot', html, plain: plain || html.replace(/<[^>]+>/g,' ')}); aiRender(); }
+
+let aiServer = null;   // null = sin probar · true = hay /api/chat (IA en el servidor) · false = no hay
+function sendAi(){
+  const q = $('aiText').value.trim();
+  if(!q || aiBusy) return;
+  $('aiText').value = '';
+  aiMsgs.push({who:'user', plain:q}); aiRender();
+  if(aiKey){ callClaude(q); }
+  else if(location.protocol.startsWith('http') && aiServer !== false){ callServer(q); }
+  else { setTimeout(()=>aiBot(...asistenteLocal(q)), 350); }
+}
+
+function buildAiPayload(){
+  const ctx = DESTINOS.filter(d=>!d.basico).map(d =>
+    `${d.nombre} (${d.pais}): ${d.diasSug}d, ${d.costoDia.mid}€/día, vuelo ${vueloDe(d)}€, época ${d.mejorEpoca}, ${d.tags.join('/')}`).join('\n');
+  const system = `Eres el asistente de Wanderplan, una app de planificación de viajes. Responde SIEMPRE en español de España, breve (máx 120 palabras), práctico, con cifras concretas cuando las haya.
+Usuario: ${currentUser.n}, viaja desde ${origen().nombre} (${origen().ciudad}).
+Destinos destacados de la app (coste/día persona estilo intermedio):\n${ctx}\nLa app tiene además ~105 destinos más de catálogo, cotización por temporada (alta +35% vuelo, baja -20%), itinerarios día a día y enlaces de reserva precargados. Si procede, sugiere usar el planificador o "Sorprendeme".`;
+  return { model:'claude-haiku-4-5', max_tokens:400, system,
+    messages: aiMsgs.slice(-8).map(m=>({role: m.who==='user'?'user':'assistant', content: m.plain})) };
+}
+
+/* IA vía servidor propio (función de Vercel /api/chat — la clave vive en el servidor) */
+async function callServer(q){
+  aiBusy = true; aiRender();
+  try{
+    const res = await fetch('/api/chat', {
+      method:'POST', headers:{'content-type':'application/json'},
+      body: JSON.stringify(buildAiPayload())
+    });
+    if(res.status === 404 || res.status === 501) throw {soft:true};
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    aiServer = true; aiBusy = false; paintAiMode();
+    aiBot((data.content?.[0]?.text || 'No he podido generar respuesta.').replace(/\n/g,'<br>'));
+  }catch(err){
+    aiServer = false; aiBusy = false; paintAiMode();
+    aiBot(asistenteLocal(q)[0]);
+  }
+}
+
+/* ---------- Modo local: entiende presupuesto, días, mes, intereses y destinos ---------- */
+const btnDest = d => `<br><button class="btn small ghost" onclick="go('mapa');openDest('${d.id}')">🗺️ Ver ${d.nombre}</button>`;
+function asistenteLocal(q){
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const nq = norm(q);
+  const budget = (nq.match(/(\d[\d.]{2,})\s*(€|eur)/)||[])[1];
+  const dias = (nq.match(/(\d+)\s*dias?/)||[])[1];
+  const pax = (nq.match(/(\d+)\s*personas?/)||[])[1] || 2;
+  const mes = MESES_N.findIndex(m => nq.includes(norm(m).slice(0,3) + ' ') || nq.endsWith(norm(m).slice(0,3)) || nq.includes(norm(['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][MESES_N.indexOf(m)]||''))) + 1;
+  const tagsHit = [...new Set(DESTINOS.flatMap(d=>d.tags))].filter(t => nq.includes(norm(t)));
+  let dhit = null, dbest = 0;   // gana la palabra coincidente más larga (evita "Isla..." vs "Islandia")
+  DESTINOS.forEach(d=>{
+    norm(d.nombre).split(/[ ,()]+/).concat(norm(d.pais).split(/[ ,()]+/)).forEach(w=>{
+      if(w.length >= 4 && nq.includes(w) && w.length > dbest){ dbest = w.length; dhit = d; }
+    });
+  });
+
+  // Pregunta por un destino concreto
+  if(dhit){
+    if(/cuando|epoca|mejor mes|temporada/.test(nq))
+      return [`📅 La mejor época para <b>${dhit.nombre}</b> es <b>${dhit.mejorEpoca}</b>. ${dhit.epocaDetalle}${btnDest(dhit)}`];
+    if(/cuanto|precio|cuesta|presupuesto|vale/.test(nq)){
+      const dd = parseInt(dias) || dhit.diasSug;
+      const c = costoViaje(dhit, 'mid', dd, +pax, mes||null);
+      return [`💰 <b>${dhit.nombre}</b>, ${dd} días y ${pax} persona${pax>1?'s':''} en estilo intermedio: <b>~${fmt(c.total)}</b> (vuelos ${fmt(c.vuelos)} desde ${origen().ciudad} + ${fmt(c.diario)} de estancia + actividades e imprevistos). En temporada baja puede bajar bastante — mira el calendario del planificador.${btnDest(dhit)}`];
+    }
+    return [`${dhit.flag} <b>${dhit.nombre}</b> (${dhit.pais}): ${dhit.diasSug} días sugeridos, ~${dhit.costoDia.mid} €/día, mejor época ${dhit.mejorEpoca}. ${dhit.tags.map(t=>'#'+t).join(' ')}${btnDest(dhit)}`];
+  }
+
+  // Recomendación por presupuesto / días / gustos
+  if(budget || dias || tagsHit.length){
+    const b = budget ? parseInt(budget.replace('.','')) : 99999;
+    const dd = parseInt(dias) || 0;
+    const cands = [];
+    DESTINOS.forEach(d=>{
+      if(tagsHit.length && !tagsHit.some(t=>d.tags.includes(t))) return;
+      const usar = Math.max(2, Math.min(dd || d.diasSug, d.diasSug));
+      for(const e of ['high','mid','low']){
+        const c = costoViaje(d, e, usar, +pax, mes||null);
+        if(c.total <= b){ cands.push({d, e, usar, total:c.total}); break; }
+      }
+    });
+    if(!cands.length) return [`😕 Con esos requisitos no encuentro nada que encaje. Prueba subiendo el presupuesto, con menos días o quitando algún interés.`];
+    cands.sort((a,b2)=>b2.d.rating - a.d.rating);
+    const top = cands.slice(0,3);
+    return [`Con ${budget?`<b>${fmt(parseInt(budget.replace('.','')))}</b>`:'tu presupuesto'}${dias?` y <b>${dias} días</b>`:''}${mes?` en <b>${MESES_N[mes-1]}</b>`:''}${tagsHit.length?` buscando <b>${tagsHit.join(', ')}</b>`:''}, te encajan (para ${pax} pers.):<br>` +
+      top.map(c=>`· ${c.d.flag} <b>${c.d.nombre}</b> — ${c.usar} días, ~${fmt(c.total)} (${ESTILOS[c.e]})`).join('<br>') +
+      top.map(c=>btnDest(c.d)).join('') +
+      `<br><br>🎲 También puedes usar "Sorprendeme" con estos datos.`];
+  }
+
+  if(/sorprende|aleatorio|azar|random/.test(nq)){
+    const d = DESTINOS[Math.floor(Math.random()*DESTINOS.length)];
+    return [`🎲 ¿Qué tal <b>${d.nombre}</b> (${d.pais})? ${d.diasSug} días, mejor época ${d.mejorEpoca}.${btnDest(d)}`];
+  }
+  return [`Puedo recomendarte destinos si me dices <b>presupuesto</b> ("1500 €"), <b>días</b> ("10 días"), <b>mes</b> o <b>intereses</b> (playa, montaña, safari…). También responder sobre cualquier destino del mapa: "¿cuándo ir a Islandia?", "¿cuánto cuesta Tokio?". Y con una clave API (⚙️) me convierto en IA real. 🙂`];
+}
+
+/* ---------- Modo real: Claude vía API de Anthropic ---------- */
+async function callClaude(q){
+  aiBusy = true; aiRender();
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key': aiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify(buildAiPayload())
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    aiBusy = false;
+    aiBot((data.content?.[0]?.text || 'No he podido generar respuesta.').replace(/\n/g,'<br>'));
+  }catch(err){
+    aiBusy = false;
+    aiBot(`⚠️ No he podido conectar con la IA real (${err.message}). Revisa la clave en ⚙️ o tu conexión. Mientras tanto te respondo en modo local:<br><br>` + asistenteLocal(q)[0]);
+  }
+}
 
 /* =====================================================================
    ARRANQUE

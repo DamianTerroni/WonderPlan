@@ -1,21 +1,18 @@
-# Wanderplan — despliegue en Vercel
+# 🧭 Wanderplan
 
-App de planificación de viajes (prototipo v1.9). Un solo archivo estático: `index.html`.
+Prototipo de app para planificar viajes (proyecto APP Viaje): mapa mundial interactivo offline,
+115 destinos + creación de destinos propios, planificador con cotización por temporada, viaje
+aleatorio, itinerario día a día con horarios editables, reservas precargadas según estilo,
+documentos según país de origen, comunidad y **asistente de IA** (botón ✨).
 
-## Opción A — Vercel CLI (2 minutos)
-1. Instalá el CLI:  `npm i -g vercel`
-2. Dentro de esta carpeta:  `vercel`
-   - Iniciá sesión cuando lo pida (abre el navegador).
-   - Aceptá los valores por defecto (proyecto nuevo, sin build).
-3. Para publicar en producción:  `vercel --prod`
-   → Te da una URL tipo `https://wanderplan.vercel.app`
+## Desplegar en Vercel
+1. [vercel.com/new](https://vercel.com/new) → importa este repositorio.
+2. Framework Preset: **Other** · sin build. → **Deploy**.
+3. *(Opcional, para IA real)*: Settings → Environment Variables → `ANTHROPIC_API_KEY` = tu clave
+   de [console.anthropic.com](https://console.anthropic.com) → Redeploy.
+   El asistente ✨ pasará de "modo local" a responder con Claude en tiempo real vía `/api/chat`
+   (la clave nunca llega al navegador).
 
-## Opción B — GitHub + Vercel
-1. Subí esta carpeta a un repo de GitHub.
-2. En vercel.com → Add New → Project → importá el repo.
-3. Framework preset: **Other** (sin build). Deploy.
-   Cada push al repo redespliega solo.
+Cada push a `main` redespliega automáticamente.
 
-## Nota
-Los datos del prototipo viven en memoria: cada recarga resetea viajes guardados
-y destinos creados. La persistencia real (backend) es el siguiente paso del proyecto.
+> ⚠️ Prototipo: los datos de viajes viven en memoria (recargar resetea). Persistencia = siguiente fase.
