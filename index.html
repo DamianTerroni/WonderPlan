@@ -1762,34 +1762,56 @@ function makeBasics(){
   });
 }
 
-/* Buscador de destinos (nombre, país o interés) */
-function searchDest(q){
-  const box = $('searchResults');
-  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-  q = norm(q.trim());
-  if(q.length < 2){ box.innerHTML=''; return; }
-  const hits = DESTINOS.filter(d =>
-    norm(d.nombre).includes(q) || norm(d.pais).includes(q) || d.tags.some(t=>norm(t).includes(q))
-  ).slice(0,8);
-  if(hits.length){
-    box.innerHTML = hits.map(d=>
-      `<div class="sr-item" onclick="pickSearch('${d.id}')">${d.flag} <b>${d.nombre}</b>
-       <span>${d.pais}${d.custom?' · creado por vos':d.basico?' · estimado':' · ficha completa'}</span></div>`).join('');
-  } else {
-    const orig = q;
-    box.innerHTML = `
+/* Buscador de destinos: catálogo local + internet AUTOMÁTICAMENTE (la app
+   busca sola el lugar en el geocodificador mundial y lo añade al mapa) */
+let geoTimer = null;
+function fallbackCard(orig){
+  return `
     <div class="sr-item" style="cursor:default;display:block;">
-      <div style="color:var(--muted);margin-bottom:8px;">No está en el catálogo, pero puedo buscarlo de verdad:</div>
-      <button class="btn small" style="margin-bottom:10px;" onclick="searchLive('${orig.replace(/'/g,'')}')">🌐 Buscar "${orig}" en internet (lugar real)</button>
-      <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px;">O consultá las páginas de turismo oficiales:</div>
+      <div style="color:var(--muted);margin-bottom:8px;">Ni el catálogo ni internet encuentran "<b style="color:var(--text)">${orig}</b>" 😕 Revisá el nombre, o:</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
         <a class="btn small ghost" target="_blank" rel="noopener" href="https://www.google.com/search?q=${encodeURIComponent('turismo oficial ' + orig)}">🏛️ Web oficial de turismo ↗</a>
         <a class="btn small ghost" target="_blank" rel="noopener" href="https://es.wikivoyage.org/wiki/Special:Search?search=${encodeURIComponent(orig)}">📖 Guía Wikivoyage ↗</a>
       </div>
-      <button class="btn small" onclick="openCustomModal('${orig.replace(/'/g,'')}')">➕ Crearlo y ubicarlo en el mapa</button>
-      <div style="font-size:.72rem;color:var(--muted);margin-top:8px;">En la versión con datos reales, la app completará esto automáticamente desde las webs de turismo del país y la provincia.</div>
+      <button class="btn small" onclick="openCustomModal('${orig.replace(/'/g,'')}')">➕ Crearlo a mano y ubicarlo en el mapa</button>
     </div>`;
-  }
+}
+function searchDest(q){
+  const box = $('searchResults');
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const orig = q.trim(), nq = norm(orig);
+  clearTimeout(geoTimer);
+  if(nq.length < 2){ box.innerHTML=''; return; }
+  const hits = DESTINOS.filter(d =>
+    norm(d.nombre).includes(nq) || norm(d.pais).includes(nq) || d.tags.some(t=>norm(t).includes(nq))
+  ).slice(0,6);
+  const localHTML = hits.map(d=>
+    `<div class="sr-item" onclick="pickSearch('${d.id}')">${d.flag} <b>${d.nombre}</b>
+     <span>${d.pais}${d.custom?' · creado por vos':d.basico?' · estimado':' · ficha completa'}</span></div>`).join('');
+  box.innerHTML = localHTML + `<div class="sr-item" style="cursor:default;color:var(--muted);font-size:.8rem;" id="srGeo">🌐 Buscando también en internet…</div>`;
+
+  geoTimer = setTimeout(async ()=>{
+    let geoHTML = '';
+    try{
+      const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(orig)}&count=5&language=es&format=json`);
+      const j = await r.json();
+      if(norm($('destSearch').value.trim()) !== nq) return;   // el usuario siguió escribiendo
+      GEO_HITS = (j.results||[]).filter(g => !DESTINOS.some(d => d.nombre===g.name && d.pais===(g.country||'—')));
+      if(GEO_HITS.length){
+        geoHTML = `<div class="sr-item" style="cursor:default;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;">🌐 Encontrado en internet — un clic y lo añado al mapa</div>` +
+          GEO_HITS.map((g,i)=>
+            `<div class="sr-item" onclick="addLiveDest(${i})">${g.country_code?flagCC(g.country_code):'🌐'} <b>${g.name}</b>
+             <span>${[g.admin1, g.country].filter(Boolean).join(', ')} · lugar real</span></div>`).join('');
+      } else if(!hits.length){
+        geoHTML = fallbackCard(orig);
+      }
+    }catch(e){
+      if(norm($('destSearch').value.trim()) !== nq) return;
+      geoHTML = hits.length ? '' : fallbackCard(orig);
+    }
+    const el = document.getElementById('srGeo');
+    if(el) el.outerHTML = geoHTML;
+  }, 400);
 }
 function pickSearch(id){
   const d = dest(id);
