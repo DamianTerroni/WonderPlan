@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wanderplan — Planificá tu próximo viaje</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* required styles */
 
@@ -935,111 +934,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .map-side{position:absolute; right:0; top:0; bottom:0; max-width:92%;}
     nav{overflow-x:auto;}
   }
-
-  #appRoot{height:100%; display:flex; flex-direction:column;}
-
-  /* ---------- Pantalla de inicio de sesión / registro ---------- */
-  .auth-screen{
-    position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center;
-    background:radial-gradient(circle at 30% 20%, var(--panel2), var(--bg) 70%); padding:20px; overflow-y:auto;
-  }
-  .auth-card{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:32px 30px; width:100%; max-width:420px;}
-  .auth-logo{font-size:1.6rem; font-weight:700; text-align:center;}
-  .auth-logo span{color:var(--accent);}
-  .auth-tag{color:var(--muted); font-size:.88rem; text-align:center; margin:8px 0 24px; line-height:1.4;}
-  .auth-tabs{display:flex; background:var(--panel2); border-radius:999px; padding:4px; margin-bottom:22px;}
-  .auth-tabs button{flex:1; background:none; border:none; color:var(--muted); padding:9px 0; border-radius:999px; font-weight:600; font-size:.86rem; cursor:pointer;}
-  .auth-tabs button.on{background:var(--accent); color:#0b1220;}
-  .auth-form .field{margin-bottom:14px;}
-  .auth-error{color:var(--danger); font-size:.82rem; margin:-4px 0 14px; min-height:1.1em;}
-  .pw-strength small{display:block; font-size:.72rem; color:var(--muted); margin-top:6px; line-height:1.35;}
-  .pw-bars{display:flex; gap:4px; margin-top:8px;}
-  .pw-bars span{height:4px; flex:1; border-radius:2px; background:var(--line); transition:.15s;}
-  .pw-bars.s1 span:nth-child(1){background:var(--danger);}
-  .pw-bars.s2 span:nth-child(-n+2){background:var(--warn);}
-  .pw-bars.s3 span{background:var(--ok);}
-  .auth-switch{text-align:center; font-size:.82rem; color:var(--muted); margin-top:18px;}
-  .auth-switch a{color:var(--accent); cursor:pointer; font-weight:600; text-decoration:none;}
-  .auth-combo{position:relative;}
-  .combo-list{
-    position:absolute; top:100%; left:0; right:0; margin-top:4px; background:var(--panel2); border:1px solid var(--line);
-    border-radius:10px; max-height:210px; overflow-y:auto; z-index:10; display:none; box-shadow:0 8px 24px rgba(0,0,0,.35);
-  }
-  .combo-list.open{display:block;}
-  .combo-item{padding:9px 13px; cursor:pointer; font-size:.86rem;}
-  .combo-item:hover, .combo-item.hi{background:var(--panel);}
-  .combo-item.empty{color:var(--muted); cursor:default;}
-  .combo-item.empty:hover{background:none;}
 </style>
 </head>
 <body>
-
-<div class="auth-screen" id="authScreen">
-  <div class="auth-card">
-    <div class="auth-logo">🧭 Wander<span>plan</span></div>
-    <p class="auth-tag">Planificá tu próximo viaje. Iniciá sesión o creá tu cuenta gratis.</p>
-
-    <div class="auth-tabs">
-      <button type="button" class="on" id="tabLogin" onclick="showAuthTab('login')">Iniciar sesión</button>
-      <button type="button" id="tabSignup" onclick="showAuthTab('signup')">Crear cuenta</button>
-    </div>
-
-    <form class="auth-form" id="loginForm" onsubmit="return doLogin(event)">
-      <div class="field">
-        <label>Usuario o email</label>
-        <input id="liId" placeholder="tu usuario o tu@email.com" autocomplete="username" required>
-      </div>
-      <div class="field">
-        <label>Contraseña</label>
-        <input type="password" id="liPass" placeholder="••••••••" autocomplete="current-password" required>
-      </div>
-      <div class="auth-error" id="liError"></div>
-      <button class="btn" type="submit" style="width:100%;">Entrar</button>
-    </form>
-
-    <form class="auth-form" id="signupForm" style="display:none;" onsubmit="return doSignup(event)">
-      <div class="field">
-        <label>Nombre de usuario</label>
-        <input id="suUser" placeholder="Cómo te van a ver los demás" autocomplete="nickname" required>
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="suEmail" placeholder="tu@email.com" autocomplete="email" required>
-      </div>
-      <div class="field auth-combo">
-        <label>País de origen</label>
-        <input id="suPaisInput" placeholder="Escribí para buscar tu país…" autocomplete="off"
-          oninput="filterPaisOptions(this.value)" onfocus="filterPaisOptions(this.value)" onblur="closePaisOptions()">
-        <input type="hidden" id="suPais" required>
-        <div class="combo-list" id="paisOptions"></div>
-      </div>
-      <div class="field">
-        <label>Contraseña</label>
-        <input type="password" id="suPass" placeholder="Mín. 8 caracteres" autocomplete="new-password" oninput="updatePwStrength()" required>
-        <div class="pw-strength">
-          <div class="pw-bars" id="pwBars"><span></span><span></span><span></span></div>
-          <small>Mínimo 8 caracteres, con mayúscula, minúscula y número.</small>
-        </div>
-      </div>
-      <div class="field">
-        <label>Repetí la contraseña</label>
-        <input type="password" id="suPass2" placeholder="••••••••" autocomplete="new-password" required>
-      </div>
-      <div class="auth-error" id="suError"></div>
-      <button class="btn" type="submit" style="width:100%;">Crear cuenta</button>
-    </form>
-
-    <div class="auth-form" id="suPending" style="display:none;">
-      <p style="color:var(--text);line-height:1.5;font-size:.92rem;">
-        📩 Te mandamos un mail de confirmación a <b id="suPendingEmail"></b>.<br><br>
-        Abrilo y tocá el enlace para activar tu cuenta. Si no lo ves, revisá spam o promociones.
-      </p>
-      <button class="btn ghost" type="button" style="width:100%;margin-top:12px;" onclick="showAuthTab('login')">Ya lo confirmé, iniciar sesión</button>
-    </div>
-  </div>
-</div>
-
-<div id="appRoot" style="display:none;">
 <header>
   <div class="logo" onclick="go('mapa')">🧭 Wander<span>plan</span></div>
   <nav id="mainnav">
@@ -1050,7 +947,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <button data-v="comunidad" onclick="go('comunidad')">👥 Comunidad</button>
   </nav>
   <div class="spacer"></div>
-  <div class="userbox" onclick="logout()" title="Cerrar sesión">
+  <div class="userbox" onclick="switchUser()" title="Cambiar de usuario (demo)">
     <div class="avatar" id="uAvatar"></div>
     <div>
       <div id="uName" style="font-size:.9rem;font-weight:600;"></div>
@@ -1198,7 +1095,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <input id="aiText" placeholder="Ej: tengo 1500 € y 10 días en enero…" onkeydown="if(event.key==='Enter')sendAi()">
     <button class="btn" onclick="sendAi()" title="Enviar">➤</button>
   </div>
-</div>
 </div>
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modalBox"></div>
@@ -1739,31 +1635,8 @@ const USERS = [
 ];
 
 const PAISES = {
-  ES: {nombre:"España",              flag:"🇪🇸", ciudad:"Madrid",            gent:"españoles"},
-  AR: {nombre:"Argentina",           flag:"🇦🇷", ciudad:"Buenos Aires",      gent:"argentinos"},
-  MX: {nombre:"México",              flag:"🇲🇽", ciudad:"Ciudad de México",  gent:"mexicanos"},
-  CO: {nombre:"Colombia",            flag:"🇨🇴", ciudad:"Bogotá",            gent:"colombianos"},
-  CL: {nombre:"Chile",               flag:"🇨🇱", ciudad:"Santiago",          gent:"chilenos"},
-  PE: {nombre:"Perú",                flag:"🇵🇪", ciudad:"Lima",              gent:"peruanos"},
-  UY: {nombre:"Uruguay",             flag:"🇺🇾", ciudad:"Montevideo",        gent:"uruguayos"},
-  PY: {nombre:"Paraguay",            flag:"🇵🇾", ciudad:"Asunción",          gent:"paraguayos"},
-  BO: {nombre:"Bolivia",             flag:"🇧🇴", ciudad:"La Paz",            gent:"bolivianos"},
-  EC: {nombre:"Ecuador",             flag:"🇪🇨", ciudad:"Quito",             gent:"ecuatorianos"},
-  VE: {nombre:"Venezuela",           flag:"🇻🇪", ciudad:"Caracas",           gent:"venezolanos"},
-  CR: {nombre:"Costa Rica",          flag:"🇨🇷", ciudad:"San José",          gent:"costarricenses"},
-  PA: {nombre:"Panamá",              flag:"🇵🇦", ciudad:"Ciudad de Panamá",  gent:"panameños"},
-  DO: {nombre:"Rep. Dominicana",     flag:"🇩🇴", ciudad:"Santo Domingo",     gent:"dominicanos"},
-  GT: {nombre:"Guatemala",           flag:"🇬🇹", ciudad:"Ciudad de Guatemala", gent:"guatemaltecos"},
-  CU: {nombre:"Cuba",                flag:"🇨🇺", ciudad:"La Habana",         gent:"cubanos"},
-  US: {nombre:"Estados Unidos",      flag:"🇺🇸", ciudad:"Nueva York",        gent:"estadounidenses"},
-  CA: {nombre:"Canadá",              flag:"🇨🇦", ciudad:"Toronto",           gent:"canadienses"},
-  BR: {nombre:"Brasil",              flag:"🇧🇷", ciudad:"São Paulo",         gent:"brasileños"},
-  FR: {nombre:"Francia",             flag:"🇫🇷", ciudad:"París",             gent:"franceses"},
-  IT: {nombre:"Italia",              flag:"🇮🇹", ciudad:"Roma",              gent:"italianos"},
-  DE: {nombre:"Alemania",            flag:"🇩🇪", ciudad:"Berlín",            gent:"alemanes"},
-  GB: {nombre:"Reino Unido",         flag:"🇬🇧", ciudad:"Londres",           gent:"británicos"},
-  PT: {nombre:"Portugal",            flag:"🇵🇹", ciudad:"Lisboa",            gent:"portugueses"},
-  NL: {nombre:"Países Bajos",        flag:"🇳🇱", ciudad:"Ámsterdam",         gent:"neerlandeses"}
+  ES: {nombre:"España",    flag:"🇪🇸", ciudad:"Madrid",       gent:"españoles"},
+  AR: {nombre:"Argentina", flag:"🇦🇷", ciudad:"Buenos Aires", gent:"argentinos"}
 };
 
 /* Datos específicos por origen ARGENTINA (los de España están en cada destino).
@@ -1906,8 +1779,9 @@ function searchDest(q){
     const orig = q;
     box.innerHTML = `
     <div class="sr-item" style="cursor:default;display:block;">
-      <div style="color:var(--muted);margin-bottom:8px;">Todavía no tenemos "<b style="color:var(--text)">${orig}</b>" en el catálogo 😕</div>
-      <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px;">Buscá info en las páginas de turismo oficiales:</div>
+      <div style="color:var(--muted);margin-bottom:8px;">No está en el catálogo, pero puedo buscarlo de verdad:</div>
+      <button class="btn small" style="margin-bottom:10px;" onclick="searchLive('${orig.replace(/'/g,'')}')">🌐 Buscar "${orig}" en internet (lugar real)</button>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px;">O consultá las páginas de turismo oficiales:</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
         <a class="btn small ghost" target="_blank" rel="noopener" href="https://www.google.com/search?q=${encodeURIComponent('turismo oficial ' + orig)}">🏛️ Web oficial de turismo ↗</a>
         <a class="btn small ghost" target="_blank" rel="noopener" href="https://es.wikivoyage.org/wiki/Special:Search?search=${encodeURIComponent(orig)}">📖 Guía Wikivoyage ↗</a>
@@ -1921,6 +1795,154 @@ function pickSearch(id){
   const d = dest(id);
   $('destSearch').value = ''; $('searchResults').innerHTML = '';
   map.flyTo(d.coords, d.basico ? 6 : 5, {duration:1.2});
+  openDest(id);
+}
+
+/* =====================================================================
+   DATOS REALES EN TIEMPO REAL (APIs abiertas: Open-Meteo, Wikipedia)
+   ===================================================================== */
+const WMO = c => c===0?'☀️':c<=2?'🌤️':c===3?'☁️':c<=48?'🌫️':c<=67?'🌦️':c<=77?'❄️':c<=82?'🌧️':'⛈️';
+const flagCC = cc => String.fromCodePoint(...[...cc.toUpperCase()].map(ch=>127397+ch.charCodeAt(0)));
+const wikiCache = {};
+
+async function fetchWeather(d){
+  const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${d.coords[0]}&longitude=${d.coords[1]}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=4&timezone=auto`);
+  if(!r.ok) throw new Error('meteo');
+  return r.json();
+}
+async function fetchWiki(d){
+  const key = d.id;
+  if(wikiCache[key] !== undefined) return wikiCache[key];
+  for(const title of [ciudadDe(d), d.nombre, d.pais]){
+    try{
+      const r = await fetch('https://es.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title));
+      if(r.ok){
+        const j = await r.json();
+        if(j.extract && j.type === 'standard'){
+          wikiCache[key] = {extract: j.extract, url: (j.content_urls&&j.content_urls.desktop&&j.content_urls.desktop.page)||('https://es.wikipedia.org/wiki/'+encodeURIComponent(title))};
+          return wikiCache[key];
+        }
+      }
+    }catch(e){}
+  }
+  wikiCache[key] = null; return null;
+}
+
+async function loadLive(id){
+  const d = dest(id), box = document.getElementById('liveBox_'+id);
+  if(!d || !box) return;
+  box.innerHTML = '<span style="color:var(--muted);font-size:.85rem;">Cargando datos reales…</span>';
+  const [w, wiki] = await Promise.allSettled([fetchWeather(d), fetchWiki(d)]);
+  let h = '';
+  if(w.status==='fulfilled'){
+    const c = w.value.current, dy = w.value.daily;
+    h += `<div style="font-size:.95rem;margin-bottom:8px;">Ahora mismo: <b>${WMO(c.weather_code)} ${Math.round(c.temperature_2m)}°C</b></div>
+    <div class="chips" style="margin-bottom:10px;">${dy.time.slice(1).map((t,i)=>
+      `<span class="chip">${['dom','lun','mar','mié','jue','vie','sáb'][new Date(t+'T12:00').getDay()]} ${WMO(dy.weather_code[i+1])} ${Math.round(dy.temperature_2m_min[i+1])}–${Math.round(dy.temperature_2m_max[i+1])}°</span>`).join('')}</div>`;
+  }
+  if(wiki.status==='fulfilled' && wiki.value){
+    h += `<p style="font-size:.87rem;line-height:1.45;">📖 ${wiki.value.extract.length>320?wiki.value.extract.slice(0,320)+'…':wiki.value.extract} <a class="rlink" href="${wiki.value.url}" target="_blank" rel="noopener">Wikipedia ↗</a></p>`;
+    if(d.live) d.resumen = wiki.value.extract + ' (Fuente: Wikipedia)';
+  }
+  if(!h){
+    box.innerHTML = '<span style="color:var(--muted);font-size:.82rem;">🌐 Ahora mismo no hay conexión con los servicios de datos en vivo (clima y Wikipedia). En la web online se cargan automáticamente.</span>';
+    return;
+  }
+  h += `<button class="btn small ghost" style="margin-top:8px;" onclick="loadRealPois('${id}')">📍 Ver lugares reales cercanos en el mapa</button>`;
+  box.innerHTML = h;
+}
+
+/* Lugares reales cercanos (artículos geolocalizados de Wikipedia) */
+let realPoiLayer = null;
+async function loadRealPois(id){
+  const d = dest(id);
+  try{
+    const r = await fetch(`https://es.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${d.coords[0]}%7C${d.coords[1]}&gsradius=10000&gslimit=15&format=json&origin=*`);
+    const j = await r.json();
+    const hits = (j.query&&j.query.geosearch)||[];
+    if(!hits.length){ toast('No encontré lugares georreferenciados cerca 😕'); return; }
+    if(realPoiLayer) realPoiLayer.clearLayers(); else realPoiLayer = L.layerGroup().addTo(map);
+    hits.forEach(p=>{
+      const icon = L.divIcon({className:'', iconSize:[22,22], iconAnchor:[11,11],
+        html:`<div style="width:22px;height:22px;border-radius:50%;background:#fff;border:2.5px solid #0ea5e9;display:flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;">🌐</div>`});
+      L.marker([p.lat, p.lon], {icon}).addTo(realPoiLayer)
+        .bindTooltip(p.title, {direction:'top', offset:[0,-12]})
+        .bindPopup(`<div class="popup-mini"><b>🌐 ${p.title}</b><br><span style="color:var(--muted);font-size:.78rem;">Lugar real (Wikipedia)</span><br><a class="btn small" style="margin-top:6px;display:inline-block;text-decoration:none;color:#0b1220;" href="https://es.wikipedia.org/?curid=${p.pageid}" target="_blank" rel="noopener">Leer artículo ↗</a></div>`);
+    });
+    map.flyTo(d.coords, 12, {duration:1});
+    toast('📍 ' + hits.length + ' lugares reales cargados desde Wikipedia');
+  }catch(e){ toast('🌐 Sin conexión para cargar lugares reales'); }
+}
+
+/* Búsqueda mundial real: cualquier lugar del planeta (geocodificador Open-Meteo) */
+let GEO_HITS = [];
+function regionCosts(tz, cc){
+  if(cc==='ES') return {dia:100, vES:80, vAR:1000};
+  const z = (tz||'').split('/')[0];
+  return z==='Europe' ? {dia:110, vES:150, vAR:1000}
+    : z==='America' ? {dia:80, vES:800, vAR:400}
+    : z==='Asia' ? {dia:70, vES:750, vAR:1500}
+    : z==='Africa' ? {dia:70, vES:500, vAR:1200}
+    : (z==='Australia'||z==='Pacific') ? {dia:150, vES:1400, vAR:1200}
+    : {dia:90, vES:600, vAR:900};
+}
+async function searchLive(q){
+  const box = $('searchResults');
+  box.innerHTML = '<div class="sr-item" style="cursor:default;color:var(--muted);">🌐 Buscando en internet…</div>';
+  try{
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=es&format=json`);
+    const j = await r.json();
+    GEO_HITS = j.results || [];
+    if(!GEO_HITS.length){
+      box.innerHTML = '<div class="sr-item" style="cursor:default;color:var(--muted);">🌐 Internet tampoco encuentra ese lugar. Revisa el nombre.</div>';
+      return;
+    }
+    box.innerHTML = GEO_HITS.map((g,i)=>
+      `<div class="sr-item" onclick="addLiveDest(${i})">${g.country_code?flagCC(g.country_code):'🌐'} <b>${g.name}</b>
+       <span>${[g.admin1, g.country].filter(Boolean).join(', ')} · 🌐 lugar real</span></div>`).join('');
+  }catch(e){
+    box.innerHTML = '<div class="sr-item" style="cursor:default;color:var(--muted);">🌐 No hay conexión con el geocodificador. Prueba desde la web online.</div>';
+  }
+}
+let liveSeq = 0;
+function addLiveDest(i){
+  const g = GEO_HITS[i]; if(!g) return;
+  $('destSearch').value=''; $('searchResults').innerHTML='';
+  const ya = DESTINOS.find(d=>d.nombre===g.name && d.pais===g.country);
+  if(ya){ map.flyTo(ya.coords, 6, {duration:1}); openDest(ya.id); return; }
+  const rc = regionCosts(g.timezone, g.country_code);
+  const lat = g.latitude, trop = Math.abs(lat)<15;
+  const id = 'live' + (liveSeq++);
+  const d = {
+    id, nombre:g.name, pais:g.country||'—', flag:g.country_code?flagCC(g.country_code):'🌐',
+    coords:[lat, g.longitude], emoji:'🌐', basico:true, custom:true, live:true,
+    grad:GRADS[(liveSeq+3)%GRADS.length], tags:['descubierto en internet'],
+    rating:4.5, diasSug:3, vuelo:rc.vES,
+    costoDia:{low:Math.round(rc.dia*.55), mid:rc.dia, high:Math.round(rc.dia*2.1)},
+    temporada: trop?{alta:[12,1,2,3],baja:[9,10]}:lat>=0?{alta:[6,7,8,12],baja:[1,2,11]}:{alta:[12,1,2],baja:[6,7]},
+    mejorEpoca: lat>=0?'Primavera y otoño (estimado)':'Verano austral (estimado)',
+    epocaDetalle:'Destino añadido desde internet en tiempo real (geocodificador Open-Meteo). Costes estimados por región: verifica antes de reservar.',
+    resumen:`${g.name} (${g.country||'—'}), lugar real geolocalizado desde internet. La descripción contrastada se carga desde Wikipedia en su ficha.`,
+    moneda:'Moneda local — consulta el cambio', idioma:'—',
+    visado:`Consulta los requisitos de entrada a ${g.country||'este país'} para tu nacionalidad.`,
+    salud:`Consulta recomendaciones sanitarias para ${g.country||'este destino'}.`,
+    emergencias:{general:'112 funciona en la UE y muchos países — verifica el número local', turista:''},
+    embajada:{n:`Embajada/consulado de tu país en ${g.country||'destino'}`, d:'Verifica dirección y teléfono online', t:'—'},
+    docsExtra:[], reviews:[],
+    actividades:[
+      {n:'Free tour / paseo por el centro', p:0, t:'am'},
+      {n:'Principal punto de interés de '+g.name, p:Math.round(rc.dia*.15), t:'pm'},
+      {n:'Excursión de día completo por la zona', p:Math.round(rc.dia*.6), t:'full'},
+      {n:'Experiencia gastronómica local', p:Math.round(rc.dia*.35), t:'eve'},
+      {n:'Museo o mercado emblemático', p:Math.round(rc.dia*.12), t:'am'}
+    ],
+    gastro:['Cocina local','Mercado típico','Plato de la región']
+  };
+  DESTINOS.push(d);
+  ORIGEN_DATA.AR.vuelo[id] = rc.vAR;
+  addDestMarker(d); rebuildSelects();
+  map.flyTo(d.coords, 8, {duration:1});
+  toast('🌐 ' + g.name + ' añadido desde internet — cargando datos reales…');
   openDest(id);
 }
 
@@ -2027,169 +2049,20 @@ function go(v){
   if(v==='comunidad') renderFeed();
 }
 
-/* ---------- Usuario activo ---------- */
+/* ---------- Usuarios (demo multiusuario) ---------- */
 function paintUser(){
   $('uAvatar').textContent = currentUser.n[0];
   $('uAvatar').style.background = currentUser.c;
   $('uName').textContent = currentUser.n;
-  $('uPais').textContent = origen().flag + ' ' + origen().nombre;
+  $('uPais').textContent = origen().flag + ' ' + origen().nombre + ' · cambiar ▾';
 }
-
-/* =====================================================================
-   AUTENTICACIÓN — Supabase Auth (cuentas reales, con confirmación por
-   email, guardadas en la nube — no dependen de que tu PC esté prendida).
-   ===================================================================== */
-const SUPABASE_URL = 'https://bosuluswzigmciyrxuos.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_oAZl0PfjFzs43u5nXU7cQw_rOFaQ8-O';
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const AVATAR_COLORS = ['#38bdf8','#a78bfa','#f472b6','#34d399','#fbbf24','#f97316','#22d3ee','#f43f5e'];
-let mapInitialized = false;
-
-function traducirErrorAuth(error){
-  const m = (error && error.message) || '';
-  if(/already registered|already exists|user_repeated_signup/i.test(m)) return 'Ya existe una cuenta con ese email.';
-  if(/profiles_username_key/i.test(m)) return 'Ese nombre de usuario ya está en uso.';
-  if(/invalid login credentials/i.test(m)) return 'Usuario/email o contraseña incorrectos.';
-  if(/email not confirmed/i.test(m)) return 'Todavía no confirmaste tu email. Revisá tu bandeja de entrada (y spam).';
-  if(/rate limit/i.test(m)) return 'Demasiados intentos. Esperá un minuto y probá de nuevo.';
-  return m || 'Ocurrió un error. Probá de nuevo.';
-}
-function isSecurePassword(pw){
-  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(pw);
-}
-function pwScore(pw){
-  let s = 0;
-  if(pw.length>=8) s++;
-  if(/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
-  if(/\d/.test(pw)) s++;
-  if(/[^A-Za-z0-9]/.test(pw) && pw.length>=10) s++;
-  return s;
-}
-function updatePwStrength(){
-  const score = pwScore($('suPass').value);
-  $('pwBars').className = 'pw-bars' + (score<=1?' s1':score<=2?' s2':' s3');
-}
-/* Combo de país de origen con búsqueda incremental */
-function filterPaisOptions(q){
-  q = (q||'').trim().toLowerCase();
-  const entries = Object.entries(PAISES)
-    .filter(([,p])=>!q || p.nombre.toLowerCase().includes(q))
-    .sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre,'es'));
-  const list = $('paisOptions');
-  list.innerHTML = entries.length
-    ? entries.map(([code,p])=>`<div class="combo-item" onmousedown="selectPais('${code}')">${p.flag} ${p.nombre}</div>`).join('')
-    : '<div class="combo-item empty">Sin resultados</div>';
-  list.classList.add('open');
-}
-function selectPais(code){
-  $('suPais').value = code;
-  $('suPaisInput').value = PAISES[code].flag + ' ' + PAISES[code].nombre;
-  closePaisOptions();
-}
-function closePaisOptions(){ $('paisOptions').classList.remove('open'); }
-function showAuthTab(tab){
-  const isLogin = tab === 'login';
-  $('tabLogin').classList.toggle('on', isLogin);
-  $('tabSignup').classList.toggle('on', !isLogin);
-  $('loginForm').style.display = isLogin ? '' : 'none';
-  $('signupForm').style.display = isLogin ? 'none' : '';
-  $('suPending').style.display = 'none';
-  $('liError').textContent = ''; $('suError').textContent = '';
-}
-function applyProfileAsUser(profile){
-  let u = USERS.find(x=>x.n===profile.username);
-  if(!u){ u = {n:profile.username, c:profile.color, pais:profile.pais}; USERS.push(u); }
-  else { u.pais = profile.pais; u.c = profile.color; }
-  if(!TRIPS[u.n]) TRIPS[u.n] = [];
-  currentUser = u;
-}
-function enterApp(){
-  $('authScreen').style.display = 'none';
-  $('appRoot').style.display = '';
+function switchUser(){
+  const i = USERS.indexOf(currentUser);
+  currentUser = USERS[(i+1)%USERS.length];
   paintUser();
-  if(!mapInitialized){ initMap(); mapInitialized = true; }
-  else if(map) setTimeout(()=>map.invalidateSize(), 60);
+  toast('Ahora sos ' + currentUser.n + ' ' + origen().flag + ' — documentos y vuelos desde ' + origen().nombre);
   renderTrips(); renderFeed();
-}
-async function afterAuth(retry){
-  const { data: { user } } = await db.auth.getUser();
-  if(!user) return;
-  const { data: profile, error } = await db.from('profiles').select('*').eq('id', user.id).single();
-  if(error || !profile){
-    // Justo tras confirmar el email el trigger que crea el perfil puede tardar unos milisegundos.
-    if(!retry) return setTimeout(()=>afterAuth(true), 700);
-    return;
-  }
-  applyProfileAsUser(profile);
-  enterApp();
-}
-db.auth.onAuthStateChange((event, session) => {
-  if(session && (event==='SIGNED_IN' || event==='INITIAL_SESSION' || event==='TOKEN_REFRESHED')){
-    afterAuth();
-    if(window.location.hash || window.location.search) history.replaceState(null, '', window.location.pathname);
-  }
-  if(event === 'SIGNED_OUT'){
-    $('appRoot').style.display = 'none';
-    $('liPass').value = '';
-    showAuthTab('login');
-    $('authScreen').style.display = 'flex';
-  }
-});
-async function doLogin(e){
-  e.preventDefault();
-  const err = $('liError'); err.textContent = '';
-  try{
-    const id = $('liId').value.trim();
-    const pass = $('liPass').value;
-    let email = id;
-    if(!id.includes('@')){
-      const { data: found, error: rpcErr } = await db.rpc('get_email_for_username', { p_username: id });
-      if(rpcErr || !found){ err.textContent = 'No existe ninguna cuenta con ese usuario.'; return false; }
-      email = found;
-    }
-    const { error } = await db.auth.signInWithPassword({ email, password: pass });
-    if(error){ err.textContent = traducirErrorAuth(error); return false; }
-    // enterApp() lo dispara el listener onAuthStateChange (SIGNED_IN)
-  }catch(ex){
-    console.error(ex);
-    err.textContent = 'Ocurrió un error al iniciar sesión: ' + (ex && ex.message ? ex.message : ex);
-  }
-  return false;
-}
-async function doSignup(e){
-  e.preventDefault();
-  const err = $('suError'); err.textContent = '';
-  try{
-    const username = $('suUser').value.trim();
-    const email = $('suEmail').value.trim().toLowerCase();
-    const paisCode = $('suPais').value;
-    const pass = $('suPass').value, pass2 = $('suPass2').value;
-    if(username.length < 3){ err.textContent = 'El nombre de usuario debe tener al menos 3 caracteres.'; return false; }
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent = 'Ingresá un email válido.'; return false; }
-    if(!paisCode){ err.textContent = 'Elegí tu país de origen de la lista.'; return false; }
-    if(!isSecurePassword(pass)){ err.textContent = 'La contraseña debe tener 8+ caracteres, con mayúscula, minúscula y número.'; return false; }
-    if(pass !== pass2){ err.textContent = 'Las contraseñas no coinciden.'; return false; }
-    const color = AVATAR_COLORS[Math.floor(Math.random()*AVATAR_COLORS.length)];
-    const { data, error } = await db.auth.signUp({
-      email, password: pass,
-      options: { data: { username, pais: paisCode, color }, emailRedirectTo: window.location.origin + window.location.pathname }
-    });
-    if(error){ err.textContent = traducirErrorAuth(error); return false; }
-    if(data.session){
-      // Confirmación por email desactivada en el proyecto: entra directo
-      return false; // el listener onAuthStateChange hace el resto
-    }
-    $('signupForm').style.display = 'none';
-    $('suPendingEmail').textContent = email;
-    $('suPending').style.display = '';
-  }catch(ex){
-    console.error(ex);
-    err.textContent = 'Ocurrió un error al crear la cuenta: ' + (ex && ex.message ? ex.message : ex);
-  }
-  return false;
-}
-function logout(){
-  db.auth.signOut();
+  if(lastPlan){ const p = lastPlan; renderPlan(dest(p.destId), p.dias, p.pax, p.estilo, p.targetId, p.esAleatorio, p.fecha, true); }
 }
 
 /* =====================================================================
@@ -2288,6 +2161,9 @@ function openDest(id){
       <div class="section-label">📅 Mejor época</div>
       <p style="font-size:.9rem;"><b>${d.mejorEpoca}</b>. ${d.epocaDetalle}</p>
 
+      <div class="section-label">🌐 Datos reales en vivo</div>
+      <div id="liveBox_${d.id}"><span style="color:var(--muted);font-size:.85rem;">Conectando…</span></div>
+
       ${fotos.length?`<div class="section-label">📸 Fotos de la comunidad</div>
       <div class="photostrip">${fotos.slice(0,6).map(f=>`<div class="ph" style="background:${d.grad}">${f}</div>`).join('')}</div>`:''}
 
@@ -2307,6 +2183,7 @@ function openDest(id){
     </div>`;
   side.classList.add('open');
   if(map){ map.flyTo(d.coords, 5, {duration:1.2}); setTimeout(()=>map.invalidateSize(), 350); }
+  setTimeout(()=>loadLive(d.id), 80);
 }
 function closeSide(){ $('mapSide').classList.remove('open'); if(map) setTimeout(()=>map.invalidateSize(),100); }
 function renderReview(r){
@@ -2987,12 +2864,13 @@ function init(){
   const f = new Date(); f.setDate(f.getDate()+60);
   $('pFecha').value = f.getFullYear() + '-' + String(f.getMonth()+1).padStart(2,'0') + '-' + String(f.getDate()).padStart(2,'0');
   $('rMes').innerHTML = '<option value="">Cualquier mes</option>' + MESES_N.map((n,i)=>`<option value="${i+1}">${n}</option>`).join('');
-  // viaje de ejemplo para el usuario de demostración "Angel"
+  // viaje de ejemplo para el usuario inicial
   const d0 = dest('tokio');
   const c0 = costoViaje(d0,'mid',12,2);
   const docs0 = [...DOCS_BASE, ...d0.docsExtra].map((t,i)=>({t, done:i<3}));
   TRIPS['Angel'].push({id:tripSeq++, destId:'tokio', dias:12, pax:2, estilo:'mid', costo:c0, docs:docs0, creado:'10/8/2026'});
-  // El login automático (sesión guardada por Supabase) lo dispara el listener onAuthStateChange.
+  paintUser();
+  initMap();
 }
 init();
 </script>
