@@ -879,6 +879,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .diatotal{margin-top:9px; padding-top:8px; border-top:1px solid var(--line); font-size:.78rem; color:var(--muted); text-align:right;}
   .diatotal b{color:var(--warn);}
   /* Horas editables del itinerario */
+  .durlab{color:var(--muted); font-size:.72rem; font-weight:400; white-space:nowrap;}
+  .slot.mov{opacity:.55; font-size:.78rem; padding:3px 0;}
   input.hedit{
     background:transparent; border:1px dashed transparent; color:var(--accent);
     font-weight:700; font-size:.78rem; font-family:inherit; width:92px; padding:1px 4px;
@@ -1120,13 +1122,13 @@ const DESTINOS = [
   visado:"Los ciudadanos españoles no necesitan visado para estancias turísticas de hasta 90 días.",
   salud:"No se exigen vacunas. Sanidad excelente pero cara: seguro de viaje muy recomendable.",
   actividades:[
-    {n:"Cruce de Shibuya y torre Shibuya Sky", p:25, t:"pm"},
-    {n:"Templo Sensō-ji (Asakusa)", p:0, t:"am"},
-    {n:"Excursión de un día al monte Fuji / Hakone", p:110, t:"full"},
-    {n:"Cena de sushi en Tsukiji", p:45, t:"eve"},
-    {n:"TeamLab Planets (arte digital)", p:22, t:"pm"},
-    {n:"Día en Nikko o Kamakura en tren", p:60, t:"full"},
-    {n:"Karaoke + barrio de Shinjuku de noche", p:30, t:"eve"}
+    {n:"Cruce de Shibuya y torre Shibuya Sky", p:25, t:"pm", cat:"diversion", dur:3},
+    {n:"Templo Sensō-ji (Asakusa)", p:0, t:"am", cat:"cultura", dur:2.5},
+    {n:"Excursión de un día al monte Fuji / Hakone", p:110, t:"full", cat:"naturaleza", dur:11},
+    {n:"Cena de sushi en Tsukiji", p:45, t:"eve", cat:"gastro", dur:2},
+    {n:"TeamLab Planets (arte digital)", p:22, t:"pm", cat:"diversion", dur:2.5},
+    {n:"Día en Nikko o Kamakura en tren", p:60, t:"full", cat:"cultura", dur:10},
+    {n:"Karaoke + barrio de Shinjuku de noche", p:30, t:"eve", cat:"diversion", dur:3}
   ],
   gastro:["Sushi y sashimi","Ramen","Okonomiyaki","Tempura","Wagyu","Matcha y wagashi"],
   emergencias:{ general:"110 (policía) / 119 (ambulancia y bomberos)", turista:"Japan Visitor Hotline: +81 50-3816-2787 (24 h)" },
@@ -1152,12 +1154,12 @@ const DESTINOS = [
   visado:"Espacio Schengen: los españoles solo necesitan DNI o pasaporte en vigor.",
   salud:"Tarjeta Sanitaria Europea (TSE) válida. Sin vacunas requeridas.",
   actividades:[
-    {n:"Museo del Louvre (entrada reservada)", p:22, t:"am"},
-    {n:"Torre Eiffel — cima", p:29, t:"pm"},
-    {n:"Paseo en barco por el Sena", p:17, t:"eve"},
-    {n:"Montmartre y Sacré-Cœur", p:0, t:"am"},
-    {n:"Palacio de Versalles (día completo)", p:32, t:"full"},
-    {n:"Museo de Orsay", p:16, t:"pm"}
+    {n:"Museo del Louvre (entrada reservada)", p:22, t:"am", cat:"cultura", dur:3.5},
+    {n:"Torre Eiffel — cima", p:29, t:"pm", cat:"cultura", dur:2.5},
+    {n:"Paseo en barco por el Sena", p:17, t:"eve", cat:"diversion", dur:1.5},
+    {n:"Montmartre y Sacré-Cœur", p:0, t:"am", cat:"cultura", dur:3},
+    {n:"Palacio de Versalles (día completo)", p:32, t:"full", cat:"cultura", dur:8},
+    {n:"Museo de Orsay", p:16, t:"pm", cat:"cultura", dur:2.5}
   ],
   gastro:["Croissants y boulangeries","Steak frites","Quesos y vino","Crêpes","Macarons","Cocina bistró"],
   emergencias:{ general:"112 (único europeo) · 17 policía · 15 SAMU", turista:"" },
@@ -1182,12 +1184,12 @@ const DESTINOS = [
   visado:"Los españoles no necesitan visado para turismo (hasta 90 días).",
   salud:"Recomendadas: fiebre amarilla si vas a la selva, hepatitis A y tétanos. Precaución con el mal de altura (soroche).",
   actividades:[
-    {n:"Machu Picchu (entrada + tren + bus desde Cusco)", p:160, t:"full"},
-    {n:"Valle Sagrado: Pisac y Ollantaytambo", p:35, t:"full"},
-    {n:"Montaña de 7 Colores (Vinicunca)", p:30, t:"full"},
-    {n:"Laguna Humantay", p:30, t:"full"},
-    {n:"City tour Cusco + Sacsayhuamán", p:20, t:"am"},
-    {n:"Clase de cocina peruana", p:40, t:"eve"}
+    {n:"Machu Picchu (entrada + tren + bus desde Cusco)", p:160, t:"full", cat:"cultura", dur:12},
+    {n:"Valle Sagrado: Pisac y Ollantaytambo", p:35, t:"full", cat:"cultura", dur:9},
+    {n:"Montaña de 7 Colores (Vinicunca)", p:30, t:"full", cat:"naturaleza", dur:12},
+    {n:"Laguna Humantay", p:30, t:"full", cat:"naturaleza", dur:11},
+    {n:"City tour Cusco + Sacsayhuamán", p:20, t:"am", cat:"cultura", dur:3.5},
+    {n:"Clase de cocina peruana", p:40, t:"eve", cat:"gastro", dur:3}
   ],
   gastro:["Ceviche","Lomo saltado","Ají de gallina","Cuy (para valientes)","Pisco sour","Choclo con queso"],
   emergencias:{ general:"105 (policía) · 106 (bomberos/ambulancia)", turista:"Policía de Turismo Cusco: +51 84 235123" },
@@ -1212,12 +1214,12 @@ const DESTINOS = [
   visado:"Los españoles no necesitan visado para turismo (hasta 90 días).",
   salud:"Sin vacunas exigidas. Agua potable en la zona.",
   actividades:[
-    {n:"Circuito Chico + Cerro Campanario", p:25, t:"am"},
-    {n:"Ruta de los 7 Lagos (excursión día completo)", p:55, t:"full"},
-    {n:"Navegación a Isla Victoria y Bosque de Arrayanes", p:70, t:"full"},
-    {n:"Cerro Catedral (forfait día, en invierno)", p:75, t:"full"},
-    {n:"Kayak en el Nahuel Huapi", p:40, t:"pm"},
-    {n:"Tour de cervecerías artesanales", p:25, t:"eve"}
+    {n:"Circuito Chico + Cerro Campanario", p:25, t:"am", cat:"naturaleza", dur:4},
+    {n:"Ruta de los 7 Lagos (excursión día completo)", p:55, t:"full", cat:"naturaleza", dur:9},
+    {n:"Navegación a Isla Victoria y Bosque de Arrayanes", p:70, t:"full", cat:"naturaleza", dur:6.5},
+    {n:"Cerro Catedral (forfait día, en invierno)", p:75, t:"full", cat:"diversion", dur:7},
+    {n:"Kayak en el Nahuel Huapi", p:40, t:"pm", cat:"naturaleza", dur:3},
+    {n:"Tour de cervecerías artesanales", p:25, t:"eve", cat:"gastro", dur:3}
   ],
   gastro:["Cordero patagónico","Trucha","Chocolate artesanal","Asado argentino","Cerveza artesanal","Curanto"],
   emergencias:{ general:"911 (policía) · 107 (ambulancia) · 100 (bomberos)", turista:"" },
@@ -1242,11 +1244,11 @@ const DESTINOS = [
   visado:"Espacio Schengen: DNI o pasaporte en vigor.",
   salud:"Tarjeta Sanitaria Europea (TSE) válida.",
   actividades:[
-    {n:"Coliseo + Foro + Palatino (entrada combinada)", p:18, t:"am"},
-    {n:"Museos Vaticanos y Capilla Sixtina", p:20, t:"am"},
-    {n:"Galería Borghese (reserva obligatoria)", p:15, t:"pm"},
-    {n:"Trastevere: paseo y cena", p:0, t:"eve"},
-    {n:"Tour gastronómico por Testaccio", p:65, t:"pm"}
+    {n:"Coliseo + Foro + Palatino (entrada combinada)", p:18, t:"am", cat:"cultura", dur:3.5},
+    {n:"Museos Vaticanos y Capilla Sixtina", p:20, t:"am", cat:"cultura", dur:4},
+    {n:"Galería Borghese (reserva obligatoria)", p:15, t:"pm", cat:"cultura", dur:2.5},
+    {n:"Trastevere: paseo y cena", p:0, t:"eve", cat:"gastro", dur:3},
+    {n:"Tour gastronómico por Testaccio", p:65, t:"pm", cat:"gastro", dur:3.5}
   ],
   gastro:["Carbonara y cacio e pepe","Pizza al taglio","Supplì","Gelato artesanal","Carciofi alla romana","Espresso de pie en barra"],
   emergencias:{ general:"112 (único europeo) · 113 policía · 118 ambulancia", turista:"" },
@@ -1271,13 +1273,13 @@ const DESTINOS = [
   visado:"Los españoles no necesitan visado para estancias de hasta 60 días (exención turística).",
   salud:"Recomendadas: hepatitis A, tétanos, fiebre tifoidea. Bebé solo agua embotellada.",
   actividades:[
-    {n:"Gran Palacio y Wat Phra Kaew", p:14, t:"am"},
-    {n:"Wat Arun y Wat Pho (Buda reclinado)", p:8, t:"pm"},
-    {n:"Mercado flotante Damnoen Saduak", p:25, t:"am"},
-    {n:"Street food tour en Chinatown", p:30, t:"eve"},
-    {n:"Excursión a Ayutthaya en tren", p:20, t:"full"},
-    {n:"Clase de cocina tailandesa", p:35, t:"pm"},
-    {n:"Masaje tailandés (1 h)", p:10, t:"pm"}
+    {n:"Gran Palacio y Wat Phra Kaew", p:14, t:"am", cat:"cultura", dur:3},
+    {n:"Wat Arun y Wat Pho (Buda reclinado)", p:8, t:"pm", cat:"cultura", dur:3},
+    {n:"Mercado flotante Damnoen Saduak", p:25, t:"am", cat:"compras", dur:4},
+    {n:"Street food tour en Chinatown", p:30, t:"eve", cat:"gastro", dur:3},
+    {n:"Excursión a Ayutthaya en tren", p:20, t:"full", cat:"cultura", dur:9},
+    {n:"Clase de cocina tailandesa", p:35, t:"pm", cat:"gastro", dur:3.5},
+    {n:"Masaje tailandés (1 h)", p:10, t:"pm", cat:"diversion", dur:1.5}
   ],
   gastro:["Pad thai","Curry verde","Som tam (ensalada de papaya)","Mango sticky rice","Tom yum","Street food de Chinatown"],
   emergencias:{ general:"191 (policía) · 1669 (ambulancia)", turista:"Policía Turística: 1155 (atienden en inglés)" },
@@ -1302,12 +1304,12 @@ const DESTINOS = [
   visado:"ESTA obligatorio (autorización electrónica, ~21 $, solicitar mínimo 72 h antes).",
   salud:"Sin vacunas. Sanidad carísima: seguro de viaje con cobertura alta imprescindible.",
   actividades:[
-    {n:"Mirador (Summit One / Top of the Rock)", p:42, t:"pm"},
-    {n:"Musical en Broadway", p:90, t:"eve"},
-    {n:"MET / MoMA", p:28, t:"am"},
-    {n:"Ferry a Staten Island (gratis, vistas a la Estatua)", p:0, t:"am"},
-    {n:"High Line + Chelsea Market", p:0, t:"pm"},
-    {n:"Partido de NBA en el Madison Square Garden", p:80, t:"eve"}
+    {n:"Mirador (Summit One / Top of the Rock)", p:42, t:"pm", cat:"diversion", dur:2},
+    {n:"Musical en Broadway", p:90, t:"eve", cat:"diversion", dur:3},
+    {n:"MET / MoMA", p:28, t:"am", cat:"cultura", dur:3.5},
+    {n:"Ferry a Staten Island (gratis, vistas a la Estatua)", p:0, t:"am", cat:"cultura", dur:2},
+    {n:"High Line + Chelsea Market", p:0, t:"pm", cat:"naturaleza", dur:2.5},
+    {n:"Partido de NBA en el Madison Square Garden", p:80, t:"eve", cat:"diversion", dur:3}
   ],
   gastro:["Bagels y delis","Pizza de porción","Smash burgers","Brunch","Cheesecake","Food halls (Chelsea, Time Out)"],
   emergencias:{ general:"911 (todo)", turista:"" },
@@ -1332,12 +1334,12 @@ const DESTINOS = [
   visado:"Los españoles no necesitan visado para turismo (hasta 90 días).",
   salud:"Sin vacunas exigidas para el Cabo. Si añadís safari en zona de malaria (Kruger), consultá profilaxis.",
   actividades:[
-    {n:"Teleférico a Table Mountain", p:22, t:"am"},
-    {n:"Pingüinos en Boulders Beach + Cape Point", p:45, t:"full"},
-    {n:"Ruta del vino: Stellenbosch y Franschhoek", p:60, t:"full"},
-    {n:"Robben Island (prisión de Mandela)", p:30, t:"am"},
-    {n:"Safari de 2 días en reserva cercana", p:250, t:"full"},
-    {n:"Chapman's Peak Drive en coche", p:3, t:"pm"}
+    {n:"Teleférico a Table Mountain", p:22, t:"am", cat:"naturaleza", dur:3.5},
+    {n:"Pingüinos en Boulders Beach + Cape Point", p:45, t:"full", cat:"naturaleza", dur:8},
+    {n:"Ruta del vino: Stellenbosch y Franschhoek", p:60, t:"full", cat:"gastro", dur:8},
+    {n:"Robben Island (prisión de Mandela)", p:30, t:"am", cat:"cultura", dur:4},
+    {n:"Safari de 2 días en reserva cercana", p:250, t:"full", cat:"naturaleza", dur:10},
+    {n:"Chapman's Peak Drive en coche", p:3, t:"pm", cat:"naturaleza", dur:2}
   ],
   gastro:["Braai (barbacoa sudafricana)","Biltong","Bobotie","Marisco fresco","Vinos de Stellenbosch","Gatsby (bocadillo local)"],
   emergencias:{ general:"10111 (policía) · 10177 (ambulancia) · 112 desde móvil", turista:"" },
@@ -1362,12 +1364,12 @@ const DESTINOS = [
   visado:"Sin visado para turismo (hasta 180 días). Formulario migratorio digital (FMM).",
   salud:"Recomendadas: hepatitis A y tétanos. Solo agua embotellada.",
   actividades:[
-    {n:"Chichén Itzá + cenote Ik Kil (excursión)", p:55, t:"full"},
-    {n:"Ruinas de Tulum frente al mar", p:12, t:"am"},
-    {n:"Snorkel en arrecife / con tortugas en Akumal", p:35, t:"pm"},
-    {n:"Día en Isla Mujeres en catamarán", p:60, t:"full"},
-    {n:"Cenotes de Valladolid en bici", p:15, t:"full"},
-    {n:"Xcaret (parque día completo)", p:110, t:"full"}
+    {n:"Chichén Itzá + cenote Ik Kil (excursión)", p:55, t:"full", cat:"cultura", dur:11},
+    {n:"Ruinas de Tulum frente al mar", p:12, t:"am", cat:"cultura", dur:3},
+    {n:"Snorkel en arrecife / con tortugas en Akumal", p:35, t:"pm", cat:"playa", dur:3},
+    {n:"Día en Isla Mujeres en catamarán", p:60, t:"full", cat:"playa", dur:8},
+    {n:"Cenotes de Valladolid en bici", p:15, t:"full", cat:"naturaleza", dur:7},
+    {n:"Xcaret (parque día completo)", p:110, t:"full", cat:"diversion", dur:10}
   ],
   gastro:["Tacos al pastor","Cochinita pibil","Ceviche y aguachile","Marquesitas","Sopa de lima","Mezcal y margaritas"],
   emergencias:{ general:"911 (todo el país)", turista:"Atención al turista Quintana Roo: 078" },
@@ -1392,12 +1394,12 @@ const DESTINOS = [
   visado:"Espacio Schengen: DNI o pasaporte en vigor.",
   salud:"Tarjeta Sanitaria Europea (TSE) válida. Agua del grifo excelente (¡gratis!).",
   actividades:[
-    {n:"Círculo Dorado: Geysir, Gullfoss, Þingvellir", p:0, t:"full"},
+    {n:"Círculo Dorado: Geysir, Gullfoss, Þingvellir", p:0, t:"full", cat:"naturaleza", dur:8},
     {n:"Alquiler de coche (por día, compartido)", p:35, t:"na"},
-    {n:"Blue Lagoon / Sky Lagoon", p:70, t:"pm"},
-    {n:"Caminata por glaciar con guía", p:95, t:"full"},
-    {n:"Cascadas Seljalandsfoss y Skógafoss", p:0, t:"am"},
-    {n:"Caza de auroras boreales (tour nocturno)", p:60, t:"eve"}
+    {n:"Blue Lagoon / Sky Lagoon", p:70, t:"pm", cat:"diversion", dur:3},
+    {n:"Caminata por glaciar con guía", p:95, t:"full", cat:"naturaleza", dur:9},
+    {n:"Cascadas Seljalandsfoss y Skógafoss", p:0, t:"am", cat:"naturaleza", dur:4},
+    {n:"Caza de auroras boreales (tour nocturno)", p:60, t:"eve", cat:"naturaleza", dur:3.5}
   ],
   gastro:["Sopa de cordero (kjötsúpa)","Skyr","Perritos calientes de Reikiavik","Pescado fresco","Pan de centeno geotérmico"],
   emergencias:{ general:"112 (todo)", turista:"SafeTravel.is — alertas de carretera y clima" },
@@ -1750,11 +1752,11 @@ function makeBasics(){
       embajada: {n: `Embajada/consulado de tu país en ${pais}`, d: 'Verificá dirección y teléfono online antes de viajar', t: '—'},
       docsExtra: [], reviews: [],
       actividades: [
-        {n:'Free tour / paseo por el centro', p:0, t:'am'},
-        {n:'Principal punto de interés de ' + nombre, p:Math.round(diaMid*.15), t:'pm'},
-        {n:'Excursión de día completo por la zona', p:Math.round(diaMid*.6), t:'full'},
-        {n:'Experiencia gastronómica local', p:Math.round(diaMid*.35), t:'eve'},
-        {n:'Museo o mercado emblemático', p:Math.round(diaMid*.12), t:'am'}
+        {n:'Free tour / paseo por el centro', p:0, t:'am', cat:'cultura', dur:2.5},
+        {n:'Principal punto de interés de ' + nombre, p:Math.round(diaMid*.15), t:'pm', cat:'cultura', dur:2.5},
+        {n:'Excursión de día completo por la zona', p:Math.round(diaMid*.6), t:'full', cat:'naturaleza', dur:8},
+        {n:'Experiencia gastronómica local', p:Math.round(diaMid*.35), t:'eve', cat:'gastro', dur:2.5},
+        {n:'Museo o mercado emblemático', p:Math.round(diaMid*.12), t:'am', cat:'compras', dur:2}
       ],
       gastro: ['Cocina local','Mercado típico','Plato nacional','Café/bar con encanto']
     });
@@ -1952,11 +1954,11 @@ function addLiveDest(i){
     embajada:{n:`Embajada/consulado de tu país en ${g.country||'destino'}`, d:'Verifica dirección y teléfono online', t:'—'},
     docsExtra:[], reviews:[],
     actividades:[
-      {n:'Free tour / paseo por el centro', p:0, t:'am'},
-      {n:'Principal punto de interés de '+g.name, p:Math.round(rc.dia*.15), t:'pm'},
-      {n:'Excursión de día completo por la zona', p:Math.round(rc.dia*.6), t:'full'},
-      {n:'Experiencia gastronómica local', p:Math.round(rc.dia*.35), t:'eve'},
-      {n:'Museo o mercado emblemático', p:Math.round(rc.dia*.12), t:'am'}
+      {n:'Free tour / paseo por el centro', p:0, t:'am', cat:'cultura', dur:2.5},
+      {n:'Principal punto de interés de '+g.name, p:Math.round(rc.dia*.15), t:'pm', cat:'cultura', dur:2.5},
+      {n:'Excursión de día completo por la zona', p:Math.round(rc.dia*.6), t:'full', cat:'naturaleza', dur:8},
+      {n:'Experiencia gastronómica local', p:Math.round(rc.dia*.35), t:'eve', cat:'gastro', dur:2.5},
+      {n:'Museo o mercado emblemático', p:Math.round(rc.dia*.12), t:'am', cat:'compras', dur:2}
     ],
     gastro:['Cocina local','Mercado típico','Plato de la región']
   };
@@ -2039,11 +2041,11 @@ function createCustomDest(ll){
     embajada:{n:`Embajada/consulado de tu país en ${c.pais}`, d:'Verificá dirección y teléfono online', t:'—'},
     docsExtra:[], reviews:[],
     actividades:[
-      {n:'Free tour / paseo por el centro', p:0, t:'am'},
-      {n:'Principal punto de interés de ' + c.nombre, p:Math.round(c.costo*.15), t:'pm'},
-      {n:'Excursión de día completo por la zona', p:Math.round(c.costo*.6), t:'full'},
-      {n:'Experiencia gastronómica local', p:Math.round(c.costo*.35), t:'eve'},
-      {n:'Museo o mercado emblemático', p:Math.round(c.costo*.12), t:'am'}
+      {n:'Free tour / paseo por el centro', p:0, t:'am', cat:'cultura', dur:2.5},
+      {n:'Principal punto de interés de ' + c.nombre, p:Math.round(c.costo*.15), t:'pm', cat:'cultura', dur:2.5},
+      {n:'Excursión de día completo por la zona', p:Math.round(c.costo*.6), t:'full', cat:'naturaleza', dur:8},
+      {n:'Experiencia gastronómica local', p:Math.round(c.costo*.35), t:'eve', cat:'gastro', dur:2.5},
+      {n:'Museo o mercado emblemático', p:Math.round(c.costo*.12), t:'am', cat:'compras', dur:2}
     ],
     gastro:['Cocina local','Mercado típico','Plato de la región']
   };
@@ -2136,6 +2138,7 @@ function togglePoiCat(k, el){
   el.classList.toggle('on');
   refreshPois();
   applyDestFilter();
+  if(destAbierto && $('mapSide').classList.contains('open')) openDest(destAbierto, true);
 }
 
 /* El filtro de intereses también filtra los DESTINOS del mapa (a cualquier zoom) */
@@ -2186,9 +2189,13 @@ function refreshPois(){
 }
 
 /* Ficha lateral estilo Google Maps */
-function openDest(id){
+let destAbierto = null;
+function openDest(id, keepView){
   const d = dest(id);
+  destAbierto = id;
   const side = $('mapSide');
+  const actsVisibles = d.actividades.filter(a=>a.t!=='na' && (!a.cat || poiCatsOn.has(a.cat)));
+  const actsOcultas = d.actividades.filter(a=>a.t!=='na').length - actsVisibles.length;
   const fotos = d.reviews.flatMap(r=>r.fotos||[]);
   side.innerHTML = `
     <button class="closebtn" onclick="closeSide()" style="right:0;">✕</button>
@@ -2214,8 +2221,10 @@ function openDest(id){
       ${fotos.length?`<div class="section-label">📸 Fotos de la comunidad</div>
       <div class="photostrip">${fotos.slice(0,6).map(f=>`<div class="ph" style="background:${d.grad}">${f}</div>`).join('')}</div>`:''}
 
-      <div class="section-label">🎯 Qué hacer</div>
-      <ul class="plain">${d.actividades.slice(0,5).map(a=>`<li><span>${a.n}</span><span class="price">${a.p===0?'Gratis':a.p+' €'}</span></li>`).join('')}</ul>
+      <div class="section-label">🎯 Qué hacer <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">· según tus intereses del mapa</span></div>
+      <ul class="plain">${actsVisibles.slice(0,6).map(a=>`<li><span>${a.cat&&CATS[a.cat]?CATS[a.cat].e+' ':''}${a.n} ${a.dur?`<span class="durlab">≈${a.dur} h</span>`:''}</span><span class="price">${a.p===0?'Gratis':a.p+' €'}</span></li>`).join('')}</ul>
+      ${actsOcultas>0?`<p style="font-size:.78rem;color:var(--muted);">🎯 ${actsOcultas} actividad${actsOcultas>1?'es':''} oculta${actsOcultas>1?'s':''} por tus filtros de interés (reactivalos en el panel del mapa).</p>`:''}
+      ${!actsVisibles.length?'<p style="font-size:.85rem;color:var(--muted);">Todas las actividades están filtradas: activa algún interés en el panel del mapa.</p>':''}
 
       <div class="section-label">🍽️ Qué comer</div>
       <div class="chips">${d.gastro.map(g=>`<span class="chip acc">${g}</span>`).join('')}</div>
@@ -2229,10 +2238,10 @@ function openDest(id){
       </div>
     </div>`;
   side.classList.add('open');
-  if(map){ map.flyTo(d.coords, 5, {duration:1.2}); setTimeout(()=>map.invalidateSize(), 350); }
+  if(map && !keepView){ map.flyTo(d.coords, 5, {duration:1.2}); setTimeout(()=>map.invalidateSize(), 350); }
   setTimeout(()=>loadLive(d.id), 80);
 }
-function closeSide(){ $('mapSide').classList.remove('open'); if(map) setTimeout(()=>map.invalidateSize(),100); }
+function closeSide(){ destAbierto = null; $('mapSide').classList.remove('open'); if(map) setTimeout(()=>map.invalidateSize(),100); }
 function renderReview(r){
   const u = USERS.find(x=>x.n===r.u) || {c:'#64748b'};
   return `<div class="review">
@@ -2439,8 +2448,10 @@ function bookingLinks(d, fechaISO, dias, estilo, pax){
   <div class="bookrow"><span class="bk">🎟️ Entradas</span>${c.entradas}</div>
   <p style="font-size:.78rem;color:var(--muted);">Se abren en tu navegador con el destino, ${pax} viajero${pax>1?'s':''}${fechaISO?' y tus fechas':''} precargados, filtrados según la calidad elegida (cambiá el estilo del viaje y cambian las sugerencias). Cuando tengas los vuelos, ajustá las horas del itinerario: son editables.</p>`;
 }
-const reservaAct = (d, nombre) =>
-  `<a class="rlink" href="https://www.civitatis.com/es/buscar/?q=${encodeURIComponent(nombre.replace(/[⭐🍽️✈️🚶🛍️🧳]/g,'').trim() + ' ' + ciudadDe(d))}" target="_blank" rel="noopener" title="Reservar esta actividad">reservar ↗</a>`;
+const reservaAct = (d, nombre) => {
+  const limpio = nombre.replace(/<[^>]+>/g,'').replace(/[\p{Extended_Pictographic}️‍]/gu,'').replace(/≈[\d.,]+ ?h/g,'').replace(/·.*$/,'').trim();
+  return `<a class="rlink" href="https://www.civitatis.com/es/buscar/?q=${encodeURIComponent(limpio + ' ' + ciudadDe(d))}" target="_blank" rel="noopener" title="Reservar esta actividad">reservar ↗</a>`;
+};
 
 /* =====================================================================
    ITINERARIO DÍA A DÍA (se genera al confirmar/guardar el viaje)
@@ -2448,53 +2459,81 @@ const reservaAct = (d, nombre) =>
 const shuffle = arr => [...arr].sort(()=>Math.random()-.5);
 const DIAS_SEM = ['dom','lun','mar','mié','jue','vie','sáb'];
 
+/* Itinerario calculado por TIEMPO: duración real de cada actividad +
+   ~30 min de desplazamiento entre ellas, con el almuerzo encajado */
+const fmtHM = min => String(Math.floor(min/60)).padStart(2,'0') + ':' + String(Math.round(min%60)).padStart(2,'0');
+const TRASLADO = 30;                                   // min entre actividades
+const durMin = a => Math.round((a.dur || (a.t==='full' ? 9 : a.t==='eve' ? 2.5 : 3)) * 60);
+const actLabel = a => `${a.cat && CATS[a.cat] ? CATS[a.cat].e + ' ' : ''}${a.n} <span class="durlab">≈${(durMin(a)/60).toFixed(durMin(a)%60 ? 1 : 0)} h</span>`;
+
 function buildItinerary(d, dias){
   const acts = d.actividades.filter(a=>a.t && a.t!=='na');
   const fulls = shuffle(acts.filter(a=>a.t==='full'));
-  const ams   = shuffle(acts.filter(a=>a.t==='am'));
-  const pms   = shuffle(acts.filter(a=>a.t==='pm'));
+  const diurnas = shuffle(acts.filter(a=>a.t==='am'||a.t==='pm'));
   const eves  = shuffle(acts.filter(a=>a.t==='eve'));
   let gi = 0; const nextG = () => d.gastro[gi++ % d.gastro.length];
   const days = [];
 
   days.push({titulo:'✈️ Llegada', slots:[
     {h:'11:30', n:'Llegada y traslado al alojamiento'},
-    {h:'13:30', n:'🍽️ Primer almuerzo: probá ' + nextG()},
-    {h:'16:00', n:'🚶 Paseo de reconocimiento por la zona', p:0},
+    {h:'13:30–14:45', n:'🍽️ Primer almuerzo: probá ' + nextG()},
+    {h:'16:00–18:00', n:'🚶 Paseo de reconocimiento por la zona', p:0},
     {h:'21:00', n:'🍽️ Cena: ' + nextG()}
   ]});
+
+  const cierre = (slots, e) => {
+    if(e) slots.push({h:`20:30–${fmtHM(20.5*60 + durMin(e))}`, n:actLabel(e), p:e.p});
+    else slots.push({h:'21:00', n:'🍽️ Cena: ' + nextG()});
+  };
 
   const middle = Math.max(0, dias - 2);
   for(let i=0; i<middle; i++){
     if(fulls.length){
-      const a = fulls.shift(), e = eves.shift();
-      const slots = [{h:'08:30–18:00', n:'⭐ ' + a.n, p:a.p}];
-      slots.push(e ? {h:'20:30', n:e.n, p:e.p} : {h:'21:00', n:'🍽️ Cena: ' + nextG()});
+      const a = fulls.shift();
+      const ini = 8.5*60;
+      const slots = [{h:`${fmtHM(ini)}–${fmtHM(ini + durMin(a))}`, n:'⭐ ' + actLabel(a) + ' <span class="durlab">· desplazamientos incluidos</span>', p:a.p}];
+      cierre(slots, eves.shift());
       days.push({titulo:'Excursión de día completo', slots});
-    } else {
-      const a = ams.shift(), b = pms.shift(), e = eves.shift();
-      if(!a && !b && !e){
-        days.push({titulo:'😌 Día libre', libre:true, slots:[
-          {h:'a tu ritmo', n:'Mercados, barrios, playa o repetir lo que más te gustó. Sugerencia gastro: ' + nextG()}
-        ]});
-        continue;
-      }
-      const slots = [];
-      if(a) slots.push({h:'09:30–13:00', n:a.n, p:a.p});
-      slots.push({h:'13:30', n:'🍽️ Almuerzo: ' + nextG()});
-      if(b) slots.push({h:'15:00–18:30', n:b.n, p:b.p});
-      slots.push(e ? {h:'20:30', n:e.n, p:e.p} : {h:'21:00', n:'🍽️ Cena: ' + nextG()});
-      days.push({titulo:'Día de visitas', slots});
+      continue;
     }
+    if(!diurnas.length && !eves.length){
+      days.push({titulo:'😌 Día libre', libre:true, slots:[
+        {h:'a tu ritmo', n:'Mercados, barrios, playa o repetir lo que más te gustó. Sugerencia gastro: ' + nextG()}
+      ]});
+      continue;
+    }
+    // Agenda del día: 09:30 → 19:00, encadenando duración + traslados
+    const slots = [];
+    let t = 9.5*60, almuerzo = false;
+    while(diurnas.length && t < 19*60){
+      const a = diurnas[0];
+      if(!almuerzo && (t >= 13*60 || t + durMin(a) > 13.5*60)){
+        const tl = Math.max(t, 13*60);
+        slots.push({h:`${fmtHM(tl)}–${fmtHM(tl+75)}`, n:'🍽️ Almuerzo: ' + nextG()});
+        t = tl + 75; almuerzo = true; continue;
+      }
+      if(t + durMin(a) > 19*60) break;                 // no cabe hoy → otro día
+      diurnas.shift();
+      slots.push({h:`${fmtHM(t)}–${fmtHM(t + durMin(a))}`, n:actLabel(a), p:a.p});
+      t += durMin(a);
+      if(diurnas.length && t < 18.5*60){
+        slots.push({h:fmtHM(t), n:'🚶 Desplazamiento', mov:true});
+        t += TRASLADO;
+      }
+    }
+    if(slots.length && slots[slots.length-1].mov) slots.pop();   // sin traslado colgando al final
+    if(!almuerzo) slots.push({h:'13:30–14:45', n:'🍽️ Almuerzo: ' + nextG()});
+    cierre(slots, eves.shift());
+    days.push({titulo:'Día de visitas', slots});
   }
 
   if(dias >= 2) days.push({titulo:'🧳 Regreso', slots:[
-    {h:'09:30', n:'🛍️ Mañana libre y compras de recuerdos'},
+    {h:'09:30–11:30', n:'🛍️ Mañana libre y compras de recuerdos'},
     {h:'12:00', n:'Check-out del alojamiento'},
     {h:'15:00', n:'✈️ Vuelo de regreso'}
   ]});
 
-  return {days, sobran:[...fulls, ...ams, ...pms, ...eves]};
+  return {days, sobran:[...fulls, ...diurnas, ...eves]};
 }
 
 function renderItinerary(t){
@@ -2517,7 +2556,7 @@ function renderItinerary(t){
     <div class="flexhead">
       <div>
         <div class="section-label" style="margin-top:0;">🗓️ Itinerario día a día</div>
-        <p style="font-size:.85rem;color:var(--muted);">Total en entradas: <b style="color:var(--warn)">${totalEntradas} € por persona</b> (ya contemplado en el presupuesto de actividades). ✏️ Las horas son editables: tocá cualquiera y ajustala cuando sepas tus vuelos y estancias.</p>
+        <p style="font-size:.85rem;color:var(--muted);">Agenda calculada con la <b>duración de cada actividad</b> y ~30 min de desplazamiento entre ellas. Total en entradas: <b style="color:var(--warn)">${totalEntradas} € por persona</b>. ✏️ Las horas son editables: tocá cualquiera y ajustala cuando sepas tus vuelos.</p>
       </div>
       <button class="btn small ghost" onclick="regenItin(${t.id})">🔄 Reorganizar</button>
     </div>
@@ -2527,7 +2566,7 @@ function renderItinerary(t){
         return `<div class="diacard ${day.libre?'libre':''}">
           <h4>Día ${i+1} — ${day.titulo}</h4>
           <div class="dfecha">${fechaDia(i)}</div>
-          ${day.slots.map((sl,si)=>`<div class="slot">
+          ${day.slots.map((sl,si)=>`<div class="slot${sl.mov?' mov':''}">
             <input class="hedit" value="${sl.h}" title="Hora editable" onchange="editHora(${t.id},${i},${si},this.value)">
             <span class="sn">${sl.n}${sl.p>0?reservaAct(d, sl.n):''}</span>${precio(sl.p)}</div>`).join('')}
           ${entradasDia>0?`<div class="diatotal">Entradas del día: <b>${entradasDia} € pp</b></div>`:''}
