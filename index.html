@@ -1887,12 +1887,16 @@ const OSMQ = {
 async function loadOSM(id, tipo){
   const d = dest(id), cfg = OSMQ[tipo];
   const list = document.getElementById('realList_'+id);
-  if(list) list.innerHTML = '<span style="color:var(--muted);">🌐 Buscando ' + cfg.label + ' reales en OpenStreetMap…</span>';
-  const query = `[out:json][timeout:15];nwr[${cfg.sel}]["name"](around:2500,${d.coords[0]},${d.coords[1]});out center 40;`;
+  if(list) list.innerHTML = '<span style="color:var(--muted);">🌐 Buscando ' + cfg.label + ' reales en OpenStreetMap… (puede tardar unos segundos)</span>';
+  const query = `[out:json][timeout:12];nwr[${cfg.sel}]["name"](around:2500,${d.coords[0]},${d.coords[1]});out center 40;`;
+  const fetchT = (u, ms) => { const c = new AbortController(); const t = setTimeout(()=>c.abort(), ms); return fetch(u, {signal:c.signal}).finally(()=>clearTimeout(t)); };
   let elems = null;
-  for(const u of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']){
+  for(const u of ['https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+                  'https://overpass.private.coffee/api/interpreter',
+                  'https://overpass-api.de/api/interpreter',
+                  'https://overpass.kumi.systems/api/interpreter']){
     try{
-      const r = await fetch(u + '?data=' + encodeURIComponent(query));
+      const r = await fetchT(u + '?data=' + encodeURIComponent(query), 14000);
       if(r.ok){ elems = (await r.json()).elements; break; }
     }catch(e){}
   }
