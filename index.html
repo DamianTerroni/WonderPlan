@@ -2135,12 +2135,37 @@ function togglePoiCat(k, el){
   poiCatsOn.has(k) ? poiCatsOn.delete(k) : poiCatsOn.add(k);
   el.classList.toggle('on');
   refreshPois();
+  applyDestFilter();
+}
+
+/* El filtro de intereses también filtra los DESTINOS del mapa (a cualquier zoom) */
+const CATTAGS = {
+  cultura:    ['cultura','historia','romántico'],
+  naturaleza: ['naturaleza','montaña','lagos','trekking','auroras','desierto','safari','roadtrip'],
+  gastro:     ['gastronomía','vino'],
+  playa:      ['playa','isla','buceo','relax'],
+  diversion:  ['fiesta','aventura','nieve','tecnología'],
+  compras:    ['compras']
+};
+function applyDestFilter(){
+  if(!map) return;
+  const enabled = new Set([...poiCatsOn].flatMap(c=>CATTAGS[c]||[]));
+  const mapeables = new Set(Object.values(CATTAGS).flat());
+  let ocultos = 0;
+  DESTINOS.forEach(d=>{
+    const m = markers[d.id]; if(!m) return;
+    const propios = d.tags.filter(t=>mapeables.has(t));
+    const mostrar = !propios.length || propios.some(t=>enabled.has(t));
+    if(mostrar){ if(!map.hasLayer(m)) m.addTo(map); }
+    else { if(map.hasLayer(m)){ map.removeLayer(m); } ocultos++; }
+  });
+  if(ocultos) toast('🎯 Filtrando: ' + ocultos + ' destinos ocultos según tus intereses');
 }
 function refreshPois(){
   if(!map || !poiLayer) return;
   poiLayer.clearLayers();
   const show = map.getZoom() >= 4.5;
-  $('poiHint').textContent = show ? 'Tocá un punto para ver detalles y entrada.' : 'Acercate a un destino (zoom) y aparecen sus puntos de interés.';
+  $('poiHint').textContent = show ? 'Tocá un punto para ver detalles y entrada.' : 'Los filtros ocultan destinos que no encajan. Acercate (zoom) y verás también sus puntos concretos.';
   if(!show) return;
   Object.entries(POIS).forEach(([did, list])=>{
     const d = dest(did);
