@@ -1872,8 +1872,66 @@ async function loadLive(id){
     box.innerHTML = '<span style="color:var(--muted);font-size:.82rem;">🌐 Ahora mismo no hay conexión con los servicios de datos en vivo (clima y Wikipedia). En la web online se cargan automáticamente.</span>';
     return;
   }
-  h += `<button class="btn small ghost" style="margin-top:8px;" onclick="loadRealPois('${id}')">📍 Ver lugares reales cercanos en el mapa</button>`;
   box.innerHTML = h;
+}
+
+/* =====================================================================
+   EXPLORADOR REAL POR DESTINO: restauración, cafés, cultura (OpenStreetMap)
+   ===================================================================== */
+const esc = s => String(s).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const OSMQ = {
+  rest: {sel:'"amenity"="restaurant"',           e:'🍽️', c:'#f87171', label:'restaurantes'},
+  cafe: {sel:'"amenity"~"cafe|bar|pub"',         e:'☕',  c:'#fbbf24', label:'cafés y bares'},
+  cult: {sel:'"tourism"~"museum|gallery|attraction"', e:'🏛️', c:'#a78bfa', label:'museos y cultura'}
+};
+async function loadOSM(id, tipo){
+  const d = dest(id), cfg = OSMQ[tipo];
+  const list = document.getElementById('realList_'+id);
+  if(list) list.innerHTML = '<span style="color:var(--muted);">🌐 Buscando ' + cfg.label + ' reales en OpenStreetMap…</span>';
+  const query = `[out:json][timeout:15];nwr[${cfg.sel}]["name"](around:2500,${d.coords[0]},${d.coords[1]});out center 40;`;
+  let elems = null;
+  for(const u of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']){
+    try{
+      const r = await fetch(u + '?data=' + encodeURIComponent(query));
+      if(r.ok){ elems = (await r.json()).elements; break; }
+    }catch(e){}
+  }
+  if(!elems){
+    if(list) list.innerHTML = '<span style="color:var(--muted);">🌐 OpenStreetMap no responde ahora mismo — probá de nuevo en unos segundos.</span>';
+    return;
+  }
+  const sitios = elems.map(el => ({
+      n: (el.tags && el.tags.name) || '',
+      lat: el.lat || (el.center && el.center.lat),
+      lon: el.lon || (el.center && el.center.lon),
+      extra: (el.tags && (el.tags.cuisine || el.tags.tourism || '')).split(';')[0].replace(/_/g,' '),
+      web: (el.tags && (el.tags.website || el.tags['contact:website'])) || ''
+    }))
+    .filter(s => s.n && s.lat)
+    .filter((s,i,arr) => arr.findIndex(x=>x.n===s.n) === i)
+    .slice(0, 30);
+  if(!sitios.length){
+    if(list) list.innerHTML = 'No encontré ' + cfg.label + ' con nombre en 2,5 km a la redonda. Probá con "🌟 Imperdibles".';
+    return;
+  }
+  if(realPoiLayer) realPoiLayer.clearLayers(); else realPoiLayer = L.layerGroup().addTo(map);
+  sitios.forEach(s=>{
+    const icon = L.divIcon({className:'', iconSize:[22,22], iconAnchor:[11,11],
+      html:`<div style="width:22px;height:22px;border-radius:50%;background:#fff;border:2.5px solid ${cfg.c};display:flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;">${cfg.e}</div>`});
+    L.marker([s.lat, s.lon], {icon}).addTo(realPoiLayer)
+      .bindTooltip(esc(s.n), {direction:'top', offset:[0,-12]})
+      .bindPopup(`<div class="popup-mini"><b>${cfg.e} ${esc(s.n)}</b>${s.extra?`<br><span style="color:var(--muted);font-size:.78rem;">${esc(s.extra)}</span>`:''}<br>
+        <a class="rlink" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}">Cómo llegar ↗</a>
+        ${s.web?` · <a class="rlink" target="_blank" rel="noopener" href="${esc(s.web)}">web ↗</a>`:''}
+        <br><span style="font-size:.68rem;color:var(--muted);">Fuente: OpenStreetMap</span></div>`);
+  });
+  map.flyTo(d.coords, 14, {duration:1});
+  if(list) list.innerHTML = `<b>${sitios.length} ${cfg.label} reales</b> en el mapa (fuente: OpenStreetMap):
+    <ul class="plain">${sitios.slice(0,8).map(s=>
+      `<li><span>${cfg.e} ${esc(s.n)}${s.extra?` <span class="durlab">· ${esc(s.extra)}</span>`:''}</span>
+       <a class="rlink" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}">mapa ↗</a></li>`).join('')}</ul>
+    ${sitios.length>8?`<span style="color:var(--muted);font-size:.78rem;">…y ${sitios.length-8} más en el mapa.</span>`:''}`;
+  toast(cfg.e + ' ' + sitios.length + ' ' + cfg.label + ' reales cargados');
 }
 
 /* Lugares reales cercanos (artículos geolocalizados de Wikipedia) */
@@ -2095,7 +2153,7 @@ function switchUser(){
 function initMap(){
   // Mapa 100% offline: Leaflet y el mapa mundial van incrustados en este archivo
   map = L.map('map', {
-    attributionControl:false, minZoom:2, maxZoom:12, zoomSnap:.5,
+    attributionControl:false, minZoom:2, maxZoom:15, zoomSnap:.5,
     maxBounds:[[-65,-190],[85,190]], maxBoundsViscosity:.8
   }).setView([26,10], 2.5);
   L.geoJSON(WORLD, {
@@ -2228,6 +2286,15 @@ function openDest(id, keepView){
 
       <div class="section-label">🍽️ Qué comer</div>
       <div class="chips">${d.gastro.map(g=>`<span class="chip acc">${g}</span>`).join('')}</div>
+
+      <div class="section-label">🌍 Explorar en tiempo real <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">· sitios reales de internet</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+        <button class="btn small ghost" onclick="loadOSM('${d.id}','rest')">🍽️ Restaurantes</button>
+        <button class="btn small ghost" onclick="loadOSM('${d.id}','cafe')">☕ Cafés y bares</button>
+        <button class="btn small ghost" onclick="loadOSM('${d.id}','cult')">🏛️ Museos y cultura</button>
+        <button class="btn small ghost" onclick="loadRealPois('${d.id}')">🌟 Imperdibles</button>
+      </div>
+      <div id="realList_${d.id}" style="font-size:.85rem;"></div>
 
       <div class="section-label">💬 Opiniones de viajeros</div>
       ${d.reviews.length ? d.reviews.map(r=>renderReview(r)).join('') : '<p style="font-size:.88rem;color:var(--muted);padding:6px 0 2px;">Todavía no hay opiniones para este destino. ¡Viajá y sé el primero en compartirlo! 📸</p>'}
